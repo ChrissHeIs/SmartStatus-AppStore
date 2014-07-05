@@ -99,30 +99,14 @@ void sendCommandInt(int key, int param) {
 }
 
 
-
-
-
-static void select_click_down_handler(ClickRecognizerRef recognizer, void *context) {
-	//show the weather condition instead of temperature while center button is pressed
-	layer_set_hidden(text_layer_get_layer(text_weather_temp_layer), true);
-	layer_set_hidden(text_layer_get_layer(text_weather_cond_layer), false);
-}
-
-static void select_click_up_handler(ClickRecognizerRef recognizer, void *context) {
-	//revert to showing the temperature 
-	layer_set_hidden(text_layer_get_layer(text_weather_temp_layer), false);
-	layer_set_hidden(text_layer_get_layer(text_weather_cond_layer), true);
-}
-
-
-static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
+static void updateAllData() {
 	//update all data
 	reset();
 	
 	sendCommandInt(SM_SCREEN_ENTER_KEY, STATUS_SCREEN_APP);
 }
 
-static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
+static void swipeLayers() {
 	//slide layers in/out
 
 	property_animation_destroy((PropertyAnimation*)ani_in);
@@ -141,10 +125,23 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 }
 
+
+static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
+  sendCommand(SM_PREVIOUS_TRACK_KEY);
+}
+
+static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
+  sendCommand(SM_NEXT_TRACK_KEY);
+}
+
+static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
+  sendCommand(SM_PLAYPAUSE_KEY);
+}
+
 static void click_config_provider(void *context) {
-  window_raw_click_subscribe(BUTTON_ID_SELECT, select_click_down_handler, select_click_up_handler, context);
   window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
 }
 
 static void window_load(Window *window) {
