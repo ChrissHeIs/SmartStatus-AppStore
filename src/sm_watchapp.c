@@ -442,7 +442,10 @@ static void init(void) {
 
 	bluetooth_connection_service_subscribe(bluetoothChanged);
 	battery_state_service_subscribe(batteryChanged);
-
+  
+  //Adding inverttLayer to invert all the app
+  InverterLayer *invLayer = inverter_layer_create(bg_bounds);
+	layer_add_child(window_layer, inverter_layer_get_layer(invLayer));
 }
 
 static void deinit(void) {
