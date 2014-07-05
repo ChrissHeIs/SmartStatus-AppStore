@@ -106,7 +106,7 @@ static void updateAllData() {
 	sendCommandInt(SM_SCREEN_ENTER_KEY, STATUS_SCREEN_APP);
 }
 
-static void swipeLayers() {
+static void swipeLayer(unsigned char layerType) {
 	//slide layers in/out
 
 	property_animation_destroy((PropertyAnimation*)ani_in);
@@ -117,7 +117,7 @@ static void swipeLayers() {
 	animation_schedule((Animation*)ani_out);
 
 
-	active_layer = (active_layer + 1) % (NUM_LAYERS);
+	active_layer = layerType;
 
 	ani_in = property_animation_create_layer_frame(animated_layer[active_layer], &GRect(138, 124, 144, 45), &GRect(0, 124, 144, 45));
 	animation_schedule((Animation*)ani_in);
@@ -138,10 +138,25 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
   sendCommand(SM_PLAYPAUSE_KEY);
 }
 
+static void up_long_click_handler(ClickRecognizerRef recognizer, void *context) {
+  sendCommand(SM_VOLUME_UP_KEY);
+}
+
+static void down_long_click_handler(ClickRecognizerRef recognizer, void *context) {
+  sendCommand(SM_VOLUME_DOWN_KEY);
+}
+
+static void select_long_click_handler(ClickRecognizerRef recognizer, void *context) {
+  updateAllData();
+}
+
 static void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
+  window_long_click_subscribe(BUTTON_ID_UP, 0, up_long_click_handler, 0);
+  window_long_click_subscribe(BUTTON_ID_DOWN, 0, down_long_click_handler, 0);
+  window_long_click_subscribe(BUTTON_ID_SELECT, 0, select_long_click_handler, 0);  
 }
 
 static void window_load(Window *window) {
@@ -523,6 +538,26 @@ static void updateMusic(void *data) {
 
 
 void rcv(DictionaryIterator *received, void *context) {
+  Tuple *tuple = dict_read_first(received);
+  while (tuple) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "key - %lu", tuple->key);
+    if (tuple->type == TUPLE_CSTRING) {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "value - %s", tuple->value->cstring);
+    }
+    else if (tuple->type == TUPLE_INT) {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "value - %i", tuple->value->int8);
+    }
+    else if (tuple->type == TUPLE_UINT) {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "value - %u", tuple->value->uint8);
+    }
+    else {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "value - some shit");
+    }
+
+    tuple = dict_read_next(received);
+  }
+  
+  
 	// Got a message callback
 	Tuple *t;
 
@@ -616,6 +651,14 @@ void rcv(DictionaryIterator *received, void *context) {
 			app_timer_cancel(timerUpdateMusic);
 		timerUpdateMusic = app_timer_register(interval , updateMusic, NULL);
 
+	}
+  
+  t=dict_find(received, SM_PLAY_STATUS_KEY); 
+	if (t!=NULL) {
+		unsigned char newLayerType = t->value->uint8;
+    if (active_layer != newLayerType) {
+      swipeLayer(newLayerType);
+    }
 	}
 
 }
