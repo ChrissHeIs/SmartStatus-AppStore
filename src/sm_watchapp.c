@@ -60,6 +60,27 @@ const int WEATHER_IMG_IDS[] = {
 
 static uint32_t s_sequence_number = 0xFFFFFFFE;
 
+void logDictionary(DictionaryIterator *iter) {
+  Tuple *tuple = dict_read_first(iter);
+  while (tuple) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "key - %lu", tuple->key);
+    if (tuple->type == TUPLE_CSTRING) {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "value - %s", tuple->value->cstring);
+    }
+    else if (tuple->type == TUPLE_INT) {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "value - %i", tuple->value->int8);
+    }
+    else if (tuple->type == TUPLE_UINT) {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "value - %u", tuple->value->uint8);
+    }
+    else {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "value - some shit");
+    }
+
+    tuple = dict_read_next(iter);
+  }
+}
+
 AppMessageResult sm_message_out_get(DictionaryIterator **iter_out) {
     AppMessageResult result = app_message_outbox_begin(iter_out);
     if(result != APP_MSG_OK) return result;
@@ -538,26 +559,6 @@ static void updateMusic(void *data) {
 
 
 void rcv(DictionaryIterator *received, void *context) {
-  Tuple *tuple = dict_read_first(received);
-  while (tuple) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "key - %lu", tuple->key);
-    if (tuple->type == TUPLE_CSTRING) {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "value - %s", tuple->value->cstring);
-    }
-    else if (tuple->type == TUPLE_INT) {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "value - %i", tuple->value->int8);
-    }
-    else if (tuple->type == TUPLE_UINT) {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "value - %u", tuple->value->uint8);
-    }
-    else {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "value - some shit");
-    }
-
-    tuple = dict_read_next(received);
-  }
-  
-  
 	// Got a message callback
 	Tuple *t;
 
